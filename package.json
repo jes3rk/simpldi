@@ -14,11 +14,12 @@
   "author": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "build": "rimraf dist && tsc -p tsconfig.build.json",
     "prepare": "husky",
     "test": "vitest"
   },
   "devDependencies": {
+    "@types/node": "^20.14.12",
     "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.17.0",
     "eslint": "^9.8.0",
@@ -33,5 +34,8 @@
     "sort-package-json": "^2.10.0",
     "typescript": "^5.5.4",
     "vitest": "^2.0.4"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "^0.2.2"
   }
 }
