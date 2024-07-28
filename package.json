@@ -1,0 +1,20 @@
+{
+  "name": "simpldi",
+  "version": "0.0.0",
+  "description": "Simple dependency injection for typescript",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jes3rk/simpldi.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jes3rk/simpldi/issues"
+  },
+  "homepage": "https://github.com/jes3rk/simpldi#readme",
+  "devDependencies": {}
+}
