@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, inject, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { Container } from "./container";
 import { Inject } from "./decorators";
 import { randomUUID } from "crypto";

@@ -4,7 +4,11 @@ import {
   ProviderScope,
 } from "./constants";
 import { IAfterInit } from "./lifecycle.interfaces";
-import { IProviderDef, ProviderClass } from "./provider.interface";
+import {
+  IConstantDef,
+  IProviderDef,
+  ProviderClass,
+} from "./provider.interface";
 
 interface AddProviderOpts {
   scope?: ProviderScope;
@@ -12,7 +16,10 @@ interface AddProviderOpts {
 
 export class Container {
   private readonly parent?: Container;
-  private readonly providers: Map<string, IProviderDef<unknown>>;
+  private readonly providers: Map<
+    string,
+    IProviderDef<unknown> | IConstantDef<unknown>
+  >;
 
   public constructor();
   public constructor(parent: Container);
@@ -38,6 +45,18 @@ export class Container {
       injectionTokens:
         Reflect.getOwnMetadata(META_CONSTRUCTOR_PARAMS, provider) || [],
       scope,
+      providerType: "class",
+    });
+  }
+
+  /**
+   * Add a constant value to the container. All constants are provided
+   * as singletons.
+   */
+  public addConstant<T>(token: string, constant: T): void {
+    this.providers.set(token, {
+      providerType: "constant",
+      instance: constant,
     });
   }
 
@@ -54,6 +73,19 @@ export class Container {
       return parentProvider;
     }
 
+    switch (definition.providerType) {
+      case "class":
+        return this.resolveClassProvider<T>(definition as IProviderDef<T>);
+      case "constant":
+        return definition.instance as T;
+      default:
+        throw new Error("Undefined provider type");
+    }
+  }
+
+  private async resolveClassProvider<T>(
+    definition: IProviderDef<T>,
+  ): Promise<T> {
     if (definition.instance) return definition.instance as T;
 
     const provider = await this.constructProvider(definition);
