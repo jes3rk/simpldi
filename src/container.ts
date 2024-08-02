@@ -6,6 +6,7 @@ import {
 import { IAfterInit } from "./lifecycle.interfaces";
 import {
   IConstantDef,
+  IFactoryDef,
   IProviderDef,
   ProviderClass,
 } from "./provider.interface";
@@ -18,7 +19,7 @@ export class Container {
   private readonly parent?: Container;
   private readonly providers: Map<
     string,
-    IProviderDef<unknown> | IConstantDef<unknown>
+    IProviderDef<unknown> | IConstantDef<unknown> | IFactoryDef<unknown>
   >;
 
   public constructor();
@@ -60,6 +61,25 @@ export class Container {
     });
   }
 
+  /**
+   * Add a factory provider to construct an arbitrary provider without the need of a class
+   * definition.
+   */
+  public addFactoryProvider<T>(
+    token: string,
+    injectionTokens: string[],
+    factory: (...args: any[]) => T | Promise<T>,
+    opts?: AddProviderOpts,
+  ): void {
+    const { scope = ProviderScope.SINGLETON } = opts || {};
+    this.providers.set(token, {
+      providerType: "factory",
+      factoryFn: factory,
+      injectionTokens,
+      scope,
+    });
+  }
+
   public createChildContainer(): Container {
     return new Container(this);
   }
@@ -75,6 +95,7 @@ export class Container {
 
     switch (definition.providerType) {
       case "class":
+      case "factory":
         return this.resolveClassProvider<T>(definition as IProviderDef<T>);
       case "constant":
         return definition.instance as T;
@@ -84,7 +105,7 @@ export class Container {
   }
 
   private async resolveClassProvider<T>(
-    definition: IProviderDef<T>,
+    definition: IProviderDef<T> | IFactoryDef<T>,
   ): Promise<T> {
     if (definition.instance) return definition.instance as T;
 
@@ -99,7 +120,9 @@ export class Container {
     return provider as T;
   }
 
-  private async constructProvider<T>(definition: IProviderDef<T>): Promise<T> {
+  private async constructProvider<T>(
+    definition: IFactoryDef<T> | IProviderDef<T>,
+  ): Promise<T> {
     const injectableProviders = [];
     let scope = definition.scope;
     for (var token of definition.injectionTokens) {
@@ -110,7 +133,10 @@ export class Container {
       }
       injectableProviders.push(injectableProvider);
     }
-    const instance = new definition.ctor(...injectableProviders);
+    const instance =
+      definition.providerType == "factory"
+        ? definition.factoryFn(...injectableProviders)
+        : new definition.ctor(...injectableProviders);
     (instance as any)[INTERNAL_PROP_SCOPE] = scope;
     await (instance as IAfterInit).afterInit?.();
     return instance;

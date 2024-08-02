@@ -2,21 +2,29 @@ import { ProviderScope } from "./constants";
 
 export type ProviderClass<T> = new (...args: any[]) => T;
 
-export type ProviderType = "class" | "constant";
+export type ProviderType = "class" | "constant" | "factory";
 
 interface BaseProviderDef {
   providerType: ProviderType;
 }
 
-export interface IProviderDef<T> extends BaseProviderDef {
-  ctor: ProviderClass<T>;
+interface MakeableProvider<T> extends BaseProviderDef {
   injectionTokens: string[];
   instance?: T;
-  providerType: "class";
   scope: ProviderScope;
+}
+
+export interface IProviderDef<T> extends MakeableProvider<T> {
+  ctor: ProviderClass<T>;
+  providerType: "class";
 }
 
 export interface IConstantDef<T> extends BaseProviderDef {
   instance: T;
   providerType: "constant";
+}
+
+export interface IFactoryDef<T> extends MakeableProvider<T> {
+  providerType: "factory";
+  factoryFn: (...args: any[]) => T | Promise<T>;
 }
